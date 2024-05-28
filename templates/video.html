@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Video Playlist UI Design Like Udemy | SkillShare</title>
+    <style>
+        :root {
+            --primary: linear-gradient(to bottom right, #0a0057, #3f00ee);
+            --secondary: rgb(245 244 242);
+            --text: #000;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            background-color: rgb(245 244 242);
+            font-family: sans-serif;
+            color: var(--text);
+
+            display: flex;
+            align-items: center;
+        }
+
+        .container {
+            width: 100vw;
+
+            display: grid;
+            grid-template-columns: 1.8fr 1.2fr;
+            gap: 1rem;
+
+            padding: .5rem 1rem;
+            text-transform: capitalize;
+        }
+
+        @media screen and (max-width: 990px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .main-video,
+        .video-playlist {
+            width: 100%;
+            height: 30rem;
+        }
+
+        .main-video .title {
+            margin-top: 1rem;
+        }
+
+        .video-playlist .title {
+            padding-left: 1rem;
+        }
+
+        .video-playlist>p {
+            padding: 1rem;
+            color: var(--secondary);
+        }
+
+        .video-playlist .videos {
+            height: 70%;
+            overflow-y: auto;
+        }
+
+        .video-playlist .videos::-webkit-scrollbar {
+            width: .4rem;
+            border-radius: .4rem;
+            background-color: #0005;
+        }
+
+        .video-playlist .videos::-webkit-scrollbar-thumb {
+            border-radius: .4rem;
+            background-color: #000;
+        }
+
+        .video-playlist .videos .video {
+            position: relative;
+            width: 100%;
+            height: 4rem;
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            padding: 0 1rem;
+            margin-top: .1rem;
+            cursor: pointer;
+
+            border-radius: .5rem;
+        }
+
+        .video-playlist .videos .video:hover {
+            background-color: #0003;
+        }
+
+        .video-playlist .videos .video.active {
+            background-color: #0003;
+            color: var(--secondary);
+        }
+
+        .main-video video {
+            width: 100%;
+            border-radius: .5rem;
+        }
+
+        .video img {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+
+            width: 1.5rem;
+            height: 1.5rem;
+
+            filter: invert(100%);
+        }
+
+        .video-playlist .videos .video.active img {
+            filter: invert(100%) sepia(100%) saturate(2000%) hue-rotate(360deg);
+        }
+
+        .video p {
+            margin-left: 2.5rem;
+        }
+
+        .video h3 {
+            width: 23rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+
+            font: 100 1rem sans-serif;
+            padding: 0 .5rem;
+        }
+
+        .splash-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .splash-screen button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            cursor: pointer;
+        }
+
+        .splash-screen button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+
+<body>
+    <main class="container">
+        <section class="main-video">
+            <video id="main-video" src="video1.mp4" controls autoplay muted></video>
+            <h3 class="title">Title of the playing Video.</h3>
+            <div class="splash-screen" id="splash-screen">
+                <h2>Multiple Choice Question</h2>
+                <p>What is AI?</p>
+                <button onclick="resumeVideo()">Option 1</button>
+                <button onclick="resumeVideo()">Option 2</button>
+                <button onclick="resumeVideo()">Option 3</button>
+                <button onclick="resumeVideo()">Option 4</button>
+            </div>
+        </section>
+
+        <section class="video-playlist">
+            <h3 class="title">Title of Video Playlist</h3>
+            <p>10 lessons &nbsp; . &nbsp; 50m 48s</p>
+            <div class="videos">
+            </div>
+        </section>
+    </main>
+    <script>
+        const mainVideo = document.getElementById('main-video');
+        const mainVideoTitle = document.querySelector('.main-video .title');
+        const videoPlaylist = document.querySelector('.video-playlist .videos');
+        const splashScreen = document.getElementById('splash-screen');
+        let halfwayPointReached = false;
+        let skipAlertDisplayed = false;
+
+        let data = [
+            { 'id': 'a1', 'title': 'manipulate text background', 'name': 'video1.mp4', 'duration': '2:47' },
+            { 'id': 'a2', 'title': 'build gauge with css', 'name': 'videos/video1.mp4', 'duration': '2:45' },
+            { 'id': 'a3', 'title': '3D popup card', 'name': 'videos/video1.mp4', 'duration': '24:49' },
+            { 'id': 'a4', 'title': 'customize HTML5 form elements', 'name': 'videos/video1.mp4', 'duration': '3:59' },
+            { 'id': 'a5', 'title': 'custom select box', 'name': 'videos/video1.mp4', 'duration': '4:25' },
+            { 'id': 'a6', 'title': 'embed google map to contact form', 'name': 'videos/video1.mp4', 'duration': '5:33' },
+            { 'id': 'a7', 'title': 'password strength checker javascript web app', 'name': 'videos/video1.mp4', 'duration': '0:29' },
+            { 'id': 'a8', 'title': 'custom range slider', 'name': 'videos/video1.mp4', 'duration': '1:12' },
+            { 'id': 'a9', 'title': 'animated shopping cart', 'name': 'videos/video1.mp4', 'duration': '3:38' }
+        ];
+
+        data.forEach((video, i) => {
+            let videoElement = `
+                <div class="video" data-id="${video.id}">
+                    <img src="images/play.svg" alt="">
+                    <p>${i + 1 > 9 ? i + 1 : '0' + (i + 1)}. </p>
+                    <h3 class="title">${video.title}</h3>
+                    <p class="time">${video.duration}</p>
+                </div>
+            `;
+            videoPlaylist.innerHTML += videoElement;
+        });
+
+        let videos = document.querySelectorAll('.video');
+        videos[0].classList.add('active');
+        videos[0].querySelector('img').src = 'images/pause.svg';
+
+        videos.forEach(selectedVideo => {
+            selectedVideo.onclick = () => {
+                for (let allVideos of videos) {
+                    allVideos.classList.remove('active'); 
+                    allVideos.querySelector('img').src = 'images/play.svg';
+                }
+                selectedVideo.classList.add('active'); 
+                selectedVideo.querySelector('img').src = 'images/pause.svg';
+                let matchVideo = data.find(video => video.id == selectedVideo.dataset.id);
+                mainVideo.src = 'videos/' + matchVideo.name;
+                mainVideoTitle.innerHTML = matchVideo.title;
+                halfwayPointReached = false;
+                skipAlertDisplayed = false;
+            }
+        });
+
+        mainVideo.addEventListener('timeupdate', function () {
+            const halfwayPoint = mainVideo.duration / 2;
+            if (mainVideo.currentTime >= halfwayPoint && !halfwayPointReached) {
+                halfwayPointReached = true;
+                mainVideo.pause();
+                splashScreen.style.display = 'flex';
+            }
+        });
+
+        mainVideo.addEventListener('ended', function () {
+            const activeVideo = document.querySelector('.video.active');
+            const status = activeVideo.querySelector('img');
+            status.src = 'images/tick.png';
+        });
+
+        mainVideo.addEventListener('seeking', function (event) {
+            if (skipAlertDisplayed) {
+                mainVideo.currentTime = event.oldValue || 0;
+            } else {
+                skipAlertDisplayed = true;
+                mainVideo.currentTime = event.oldValue || 0;
+                alert("Heyy User, You can't skip the video");
+            }
+        });
+
+        function resumeVideo() {
+            splashScreen.style.display = 'none';
+            mainVideo.play();
+        }
+    </script>
+</body>
+
+</html>

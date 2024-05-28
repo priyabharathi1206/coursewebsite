@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Video Playlist UI Design Like Udemy | SkillShare</title>
+    <style>
+        :root {
+            --primary: linear-gradient(to bottom right, #ffffff, #f0f0f0);
+            --secondary: #000;
+            --text: #000;
+            --background: #ffffff;
+            --hover: #e0e0e0;
+            --active: #d0d0d0;
+            --button-bg: #4CAF50;
+            --button-hover: #45a049;
+            --button-text: #fff;
+            --button-border: #4CAF50;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            background-color: var(--background);
+            font-family: sans-serif;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+        }
+
+        .container {
+            width: 100vw;
+            display: grid;
+            grid-template-columns: 1.8fr 1.2fr;
+            gap: 1rem;
+            padding: .5rem 1rem;
+            text-transform: capitalize;
+        }
+
+        @media screen and (max-width: 990px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .main-video,
+        .video-playlist {
+            width: 100%;
+            height: 50rem;
+        }
+
+        .main-video .title {
+            margin-top: 1rem;
+        }
+
+        .video-playlist .title {
+            padding-left: 1rem;
+        }
+
+        .video-playlist>p {
+            padding: 1rem;
+            color: var(--text);
+        }
+
+        .video-playlist .videos {
+            height: 70%;
+            overflow-y: auto;
+        }
+
+        .video-playlist .videos::-webkit-scrollbar {
+            width: .4rem;
+            border-radius: .4rem;
+            background-color: #ccc;
+        }
+
+        .video-playlist .videos::-webkit-scrollbar-thumb {
+            border-radius: .4rem;
+            background-color: #888;
+        }
+
+        .video-playlist .videos .video {
+            position: relative;
+            width: 100%;
+            height: 4rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0 1rem;
+            margin-top: .1rem;
+            cursor: pointer;
+            border-radius: .5rem;
+        }
+
+        .video-playlist .videos .video:hover {
+            background-color: var(--hover);
+        }
+
+        .video-playlist .videos .video.active {
+            background-color: var(--active);
+            color: var(--secondary);
+        }
+
+        .video-playlist .videos .video.locked {
+            pointer-events: none;
+            opacity: 0.5;
+        }
+
+        .main-video iframe {
+            width: 100%;
+            height: 100%;
+            border-radius: .15rem;
+        }
+
+        .video img {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 1.5rem;
+            height: 1.5rem;
+            filter: invert(0%);
+        }
+
+        .video-playlist .videos .video.active img {
+            filter: invert(20%) sepia(100%) saturate(2000%) hue-rotate(120deg);
+        }
+
+        .video p {
+            margin-left: 2.5rem;
+        }
+
+        .video h3 {
+            width: 23rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font: 100 1rem sans-serif;
+            padding: 0 .5rem;
+        }
+
+        .splash-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.9);
+            color: var(--text);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .splash-screen button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: var(--button-bg);
+            border: none;
+            color: white;
+            cursor: pointer;
+        }
+
+        .splash-screen button:hover {
+            background-color: var(--button-hover);
+        }
+
+        .transcript {
+            display: none;
+            margin-top: 1rem;
+            padding: 1rem;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+        }
+
+        .button {
+            position: relative;
+            display: inline-block;
+            padding: 10px 20px;
+            font-size: 1rem;
+            color: var(--button-text);
+            background-color: var(--button-bg);
+            border: 2px solid var(--button-border);
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .button:hover {
+            background-color: var(--button-hover);
+        }
+
+        .button::before {
+            content: attr(data-hover-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--button-text);
+            background-color: var(--button-hover);
+            border-radius: 5px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .button:hover::before {
+            opacity: 1;
+        }
+    </style>
+</head>
+
+<body>
+    <main class="container">
+        <section class="main-video">
+            <div id="main-video" class="video-container">
+                <iframe id="player" width="840" height="473" src="https://www.youtube.com/embed/k1tLwb0nX1A?enablejsapi=1&version=3&playerapiid=ytplayer&rel=0" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div>
+            <h3 class="title">Title of the playing Video.</h3>
+            <div>
+                <div class="button" onclick="downloadPPT()" data-hover-text="Download PPT">Download</div>
+                <div class="button" onclick="toggleTranscript()">Transcript</div>
+            </div>
+            <div id="transcript" class="transcript">
+                <h4>Transcript</h4>
+                <p>This is the transcript of the video...</p>
+            </div>
+            <div class="splash-screen" id="splash-screen">
+                <h2>Multiple Choice Question</h2>
+                <p>What is AI?</p>
+                <button onclick="resumeVideo()">Option 1</button>
+                <button onclick="resumeVideo()">Option 2</button>
+                <button onclick="resumeVideo()">Option 3</button>
+                <button onclick="resumeVideo()">Option 4</button>
+            </div>
+        </section>
+
+        <section class="video-playlist">
+            <h3 class="title">Title of Video Playlist</h3>
+            <p>12 lessons &nbsp; . &nbsp; 50m 48s</p>
+            <div class="videos">
+            </div>
+        </section>
+    </main>
+    <script>
+        let player;
+        let halfwayPointReached = false;
+        let skipAlertDisplayed = false;
+        let initialTime = 0;
+        const bufferTime = 3; // Allow skipping within the first 3 seconds
+        const completedVideos = new Set(); // Set to track completed videos
+
+        function onYouTubeIframeAPIReady() {
+            player = new YT.Player('player', {
+                events: {
+                    'onReady': onPlayerReady,
+                    'onStateChange': onPlayerStateChange
+                }
+            });
+        }
+
+        function onPlayerReady(event) {
+            event.target.playVideo();
+            setInterval(handleSeeking, 1000); // Ensure handleSeeking runs continuously
+        }
+
+        function onPlayerStateChange(event) {
+            if (event.data == YT.PlayerState.PLAYING && !halfwayPointReached) {
+                halfwayPointReached = false;
+                skipAlertDisplayed = false;
+                initialTime = player.getCurrentTime();
+                checkHalfway();
+            }
+
+            if (event.data == YT.PlayerState.ENDED) {
+                markVideoAsCompleted();
+            }
+        }
+
+        function checkHalfway() {
+            let duration = player.getDuration();
+            let currentTime = player.getCurrentTime();
+            if (currentTime >= duration / 2 && !halfwayPointReached) {
+                halfwayPointReached = true;
+                player.pauseVideo();
+                document.getElementById('splash-screen').style.display = 'flex';
+            }
+            if (!halfwayPointReached) {
+                setTimeout(checkHalfway, 1000);
+            }
+        }
+
+        function resumeVideo() {
+            document.getElementById('splash-screen').style.display = 'none';
+            player.playVideo();
+        }
+
+        function handleSeeking() {
+            let currentTime = player.getCurrentTime();
+            if (currentTime > initialTime + bufferTime && !skipAlertDisplayed) {
+                player.seekTo(initialTime);
+                skipAlertDisplayed = true;
+                alert("Hey User, You can't skip the video");
+                player.pauseVideo();
+            } else if (currentTime <= bufferTime) {
+                initialTime = currentTime;
+            }
+        }
+
+        function downloadPPT() {
+            const link = document.createElement('a');
+            link.href = 'Course 1.pdf';
+            link.download = 'presentation.pdf';
+            link.click();
+        }
+
+        function toggleTranscript() {
+            const transcript = document.getElementById('transcript');
+            transcript.style.display = transcript.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function markVideoAsCompleted() {
+            let activeVideo = document.querySelector('.video.active');
+            let videoId = activeVideo.getAttribute('data-id');
+            completedVideos.add(videoId);
+            unlockNextVideo(videoId);
+        }
+
+        function unlockNextVideo(currentVideoId) {
+            let currentIndex = data.findIndex(video => video.id === currentVideoId);
+            if (currentIndex !== -1 && currentIndex < data.length - 1) {
+                let nextVideo = videos[currentIndex + 1];
+                nextVideo.classList.remove('locked');
+            }
+        }
+
+        let data = [
+            { 'id': 'a1', 'title': 'manipulate text background', 'embed': 'https://www.youtube.com/embed/k1tLwb0nX1A?enablejsapi=1', 'duration': '2:47' },
+            { 'id': 'a2', 'title': 'build gauge with css', 'embed': 'https://www.youtube.com/embed/2?enablejsapi=1', 'duration': '2:45' },
+            { 'id': 'a3', 'title': '3D popup card', 'embed': 'https://www.youtube.com/embed/3?enablejsapi=1', 'duration': '24:49' },
+            { 'id': 'a4', 'title': 'customize HTML5 form elements', 'embed': 'https://www.youtube.com/embed/4?enablejsapi=1', 'duration': '3:59' },
+            { 'id': 'a5', 'title': 'custom select box', 'embed': 'https://www.youtube.com/embed/5?enablejsapi=1', 'duration': '4:25' },
+            { 'id': 'a6', 'title': 'embed google map to contact form', 'embed': 'https://www.youtube.com/embed/6?enablejsapi=1', 'duration': '5:33' },
+            { 'id': 'a7', 'title': 'password strength checker javascript web app', 'embed': 'https://www.youtube.com/embed/7?enablejsapi=1', 'duration': '0:29' },
+            { 'id': 'a8', 'title': 'custom range slider', 'embed': 'https://www.youtube.com/embed/8?enablejsapi=1', 'duration': '1:12' },
+            { 'id': 'a9', 'title': 'animated shopping cart', 'embed': 'https://www.youtube.com/embed/9?enablejsapi=1', 'duration': '3:38' },
+            { 'id': 'a10', 'title': 'responsive navigation menu', 'embed': 'https://www.youtube.com/embed/10?enablejsapi=1', 'duration': '2:47' },
+            { 'id': 'a11', 'title': 'hover dropdown menu', 'embed': 'https://www.youtube.com/embed/11?enablejsapi=1', 'duration': '2:45' },
+            { 'id': 'a12', 'title': 'custom file input', 'embed': 'https://www.youtube.com/embed/12?enablejsapi=1', 'duration': '24:49' }
+        ];
+
+        const mainVideoTitle = document.querySelector('.main-video .title');
+        const videoPlaylist = document.querySelector('.video-playlist .videos');
+
+        data.forEach((video, i) => {
+            let videoElement = `
+                <div class="video ${i > 0 ? 'locked' : ''}" data-id="${video.id}">
+                    <img src="images/play.svg" alt="">
+                    <p>${i + 1 > 9 ? i + 1 : '0' + (i + 1)}</p>
+                    <h3 class="title">${video.title}</h3>
+                    <p class="time">${video.duration}</p>
+                </div>
+            `;
+            videoPlaylist.innerHTML += videoElement;
+        });
+
+        let videos = document.querySelectorAll('.video');
+        videos[0].classList.add('active');
+        videos[0].querySelector('img').src = 'images/pause.svg';
+
+        videos.forEach(selectedVideo => {
+            selectedVideo.onclick = () => {
+                if (selectedVideo.classList.contains('locked')) {
+                    alert('Complete the previous videos to unlock this one.');
+                    return;
+                }
+                for (let allVideos of videos) {
+                    allVideos.classList.remove('active');
+                    allVideos.querySelector('img').src = 'images/play.svg';
+                }
+                selectedVideo.classList.add('active');
+                selectedVideo.querySelector('img').src = 'images/pause.svg';
+                let matchVideo = data.find(video => video.id == selectedVideo.dataset.id);
+                player.loadVideoByUrl(matchVideo.embed);
+                mainVideoTitle.innerHTML = matchVideo.title;
+                halfwayPointReached = false;
+                skipAlertDisplayed = false;
+                initialTime = 0;
+                onPlayerStateChange({ data: YT.PlayerState.PLAYING }); // Reset states and handlers
+            }
+        });
+    </script>
+    <script src="https://www.youtube.com/iframe_api"></script>
+</body>
+
+</html>

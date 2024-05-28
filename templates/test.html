@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Video Player with Playlist and Interactive Features</title>
+    <style>
+        :root {
+            --primary: linear-gradient(to bottom right, #0a0057, #3f00ee);
+            --secondary: black;
+            --text: #000;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            background-color: rgb(222, 208, 180);
+            font-family: sans-serif;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+        }
+
+        .container {
+            width: 100vw;
+            display: grid;
+            grid-template-columns: 1.8fr 1.2fr;
+            gap: 1rem;
+            padding: 0.5rem 1rem;
+            text-transform: capitalize;
+        }
+
+        @media screen and (max-width: 990px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .video-player,
+        .playlist {
+            width: 100%;
+            height: 30rem;
+        }
+
+        .video-player video {
+            width: 100%;
+            border-radius: 0.5rem;
+        }
+
+        .video-player .title {
+            margin-top: 1rem;
+        }
+
+        .playlist .title {
+            padding-left: 1rem;
+        }
+
+        .playlist>p {
+            padding: 1rem;
+            color: var(--secondary);
+        }
+
+        .playlist .videos {
+            height: 70%;
+            overflow-y: auto;
+        }
+
+        .playlist .videos::-webkit-scrollbar {
+            width: 0.4rem;
+            border-radius: 0.4rem;
+            background-color: #0005;
+        }
+
+        .playlist .videos::-webkit-scrollbar-thumb {
+            border-radius: 0.4rem;
+            background-color: #000;
+        }
+
+        .playlist .videos .video {
+            position: relative;
+            width: 100%;
+            height: 4rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0 1rem;
+            margin-top: 0.1rem;
+            cursor: pointer;
+            border-radius: 0.5rem;
+        }
+
+        .playlist .videos .video:hover {
+            background-color: #0003;
+        }
+
+        .playlist .videos .video.active {
+            background-color: #0003;
+            color: var(--secondary);
+        }
+
+        .playlist .videos .video.completed:after {
+            content: '✔';
+            position: absolute;
+            right: 1rem;
+            color: green;
+        }
+
+        .video img {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 1.5rem;
+            height: 1.5rem;
+            filter: invert(100%);
+        }
+
+        .playlist .videos .video.active img {
+            filter: invert(100%) sepia(100%) saturate(2000%) hue-rotate(360deg);
+        }
+
+        .video p {
+            margin-left: 2.5rem;
+        }
+
+        .video h3 {
+            width: 23rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font: 100 1rem sans-serif;
+            padding: 0 0.5rem;
+        }
+
+        .splash-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .splash-screen button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            cursor: pointer;
+        }
+
+        .splash-screen button:hover {
+            background-color: #45a049;
+        }
+
+        .disabled {
+            pointer-events: none;
+            opacity: 0.5;
+        }
+
+        .transcript {
+            margin-top: 1rem;
+            padding: 1rem;
+            background-color: #f4f4f4;
+            border-radius: 0.5rem;
+            max-height: 10rem;
+            overflow-y: auto;
+        }
+
+        .transcript h3 {
+            margin-bottom: 0.5rem;
+        }
+
+        .transcript p {
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+
+<body>
+    <main class="container">
+        <section class="video-player">
+            <video id="video" controls>
+                <source src="{{url_for('static',filename='video1.mp4')}}" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+            <h3 class="title" id="current-video-title">Title of the playing Video.</h3>
+
+            <div class="splash-screen" id="splash-screen">
+                <h2>Multiple Choice Question</h2>
+                <p>What is AI?</p>
+                <button onclick="resumeVideo()">Option 1</button>
+                <button onclick="resumeVideo()">Option 2</button>
+                <button onclick="resumeVideo()">Option 3</button>
+                <button onclick="resumeVideo()">Option 4</button>
+            </div>
+
+            <div class="transcript" id="transcript">
+                <h3>Transcript</h3>
+                <p id="transcript-content">The transcript of the video will be displayed here...</p>
+            </div>
+        </section>
+
+        <section class="playlist">
+            <h3 class="title">Title of Video Playlist</h3>
+            <p>10 lessons &nbsp; . &nbsp; 50m 48s</p>
+            <div class="videos" id="videoPlaylist">
+                <!-- Videos will be dynamically loaded here -->
+            </div>
+        </section>
+    </main>
+    <script>
+        const data = [
+            { id: 1, title: 'Course Overview', duration: '1m 50s' },
+            { id: 2, title: 'What is Startup', duration: '1m 23s' },
+            { id: 3, title: 'Ideas generation ', duration: '15m 20s' }
+            // Add more video data as needed
+        ];
+
+        const transcripts = [
+            "This course provides a detailed overview of entrepreneurship as the foundation of business growth. It offers multiple constructs for entrepreneurs to be successful and pathways for their companies to achieve sustainable development. A module of the course will cover one specific topic with conceptual perspectives. Do you have a new business or social enterprise idea? This program helps you develop a comprehensive venture plan while strengthening your entrepreneurial thinking through a blend of cutting-edge theory and practice in startup design, entrepreneurship, innovation, and leadership. An entrepreneur is an individual who creates a new business, bearing most of the risks and enjoying most of the rewards. The process of setting up a business is known as entrepreneurship. The entrepreneur is commonly seen as an innovator, a source of new ideas, goods, services, and business/or procedures. Entrepreneurship allows students to learn more than just their chosen field of study and creates an interdisciplinary environment to work and develop. The networks and friendships that build help students become better connected once they leave university and help prepare them for long-term success. The main reason is that the students with an entrepreneurial mindset are accountable for their actions and know-how to execute. Entrepreneurship helps in developing communication and sales skills that are the critical component of a business today. It brings innovative ideas which are the backbone of the modern cooperative sector. The benefits of entrepreneurship extend beyond the businesses they establish. Entrepreneurs improve the lives of individuals and communities, as well as the overall economy. Entrepreneurs have been instrumental in spurring social change and improving the way people live and work. Examples of well-known entrepreneurs include Bill Gates, Steve Jobs, Mark Zuckerberg, Pierre Omidyar, Arianna Huffington, and Caterina Fake. Essential characteristics of successful entrepreneurs include risk-taking, creativity, initiative, problem-solving, organizational skills, communication, and independence. Each participant enters the program with a preliminary venture idea that they would like to work on. The program leverages associated work assignments to support the development of the new venture. Participants learn how to assess the industry and market attractiveness for their venture idea, form competitive strategies, develop minimum viable products and services, prioritize customer acquisition strategies for early traction, and generate complete financial statements.",
+            "Difference of entrepreneur, business, startup and the student will gain an expansive and deep appreciation of entrepreneurship implementation. Entrepreneurship is ‘an individual’s ability to turn ideas into action. It includes creativity, innovation, risk-taking, and the ability to plan and manage projects to achieve objectives. It is seen as vital to promoting innovation, competitiveness, and economic growth. More and more people are deciding to open their businesses; launching is part of a new generation of entrepreneurs. People, who have business ideas, can generate work that will help solve global problems more efficiently. In the ecosystem of entrepreneurship and innovation, these new initiatives are referred to as startups. Fostering entrepreneurial spirit supports the creation of new firms and business growth. However, entrepreneurship skills also provide benefits regardless of whether they see their future as starting a business. They can be used across people’s personal and working lives as they encompass ‘creativity, initiative, tenacity, teamwork, understanding of risk, and a sense of responsibility. Some countries have developed entrepreneurship education strategies, and there is an emerging body of knowledge about good and effective practice in learning and teaching. Transversal skills such as creativity, the spirit of initiative, and entrepreneurship will help those who go through entrepreneurial education programs to develop the potential to think creatively and innovate, build proactivity, flexibility, autonomy, and ability to manage and track a project pursue getting results. While becoming a successful entrepreneur is natural, others require specific essential skills to start and lead a business to success. These skills determine your entrepreneurial success. Successful entrepreneurs have mastery over both hard and soft skills. Hard skills like accounting, marketing, and financial planning are critical for running and managing a business and soft skills like communication, problem-solving and decision making help you scale up your business. Mastery of entrepreneur skills requires practice and a dedicated learning plan. Startups can disrupt the way people live, work and play: For example, Rozee. Pk, like monster.com, changed the way employers hire, Careem, like Uber, is changing intra-city travel, EasyPaisa fixed domestic remittances in Pakistan, AirBnB is setting housing for travelers that limited hotel space cannot address.",
+            "Idea generation or creativity is forming ideas, development, and communication of new thoughts and concepts. Ideas are the key to innovation. Without them, there isn't much to execute, and because execution is the key to learning, new ideas are necessary for making any improvement. Ideas alone won't make innovation happen, as you need to build a systematic process for managing those ideas. The point of creativity isn't just about generating tons of them but about paying attention to the quality of those as well. We agree that it can sometimes be challenging to come up with more of those high-quality ideas. It's not unusual to get stuck in our old habits and routines when we're supposed to be creating something new. Idea Challenge is a focused form of innovation where you raise a problem or opportunity with the hopes of coming up with creative solutions. It requires you to do market research and SWOT analysis. It would help if you aimed to develop an idea that is unique from your competitors and can be used profitably. For example, self-sanitizing door handles can be a product that you look at. It is fantastic and would be in high demand because of the current shift towards a healthy lifestyle. The process may be different for different organizations and different people. But there are three main steps in the process. It starts with the identification of the question or the problem we need to solve. After which, we need to come up with ideas and probable solutions. Finally, in the third stage, we select the best view and execute it. For example, let's suppose you are opening up a restaurant. So firstly, you need to identify what question you need to answer. Let's assume you want to decide upon a name for the restaurant. Now you will use different techniques (brainstorming, mind mapping, etc.) to develop ideas for characters. In the last step, you will choose the most appropriate name from the different characters you came up with within the second step. If you find out the solution for your problems, then there is a promising startup arises."
+
+            // Add more transcript data as needed
+        ];
+
+        const videoPlaylist = document.getElementById('videoPlaylist');
+        data.forEach((video, i) => {
+            let videoElement = `
+                <div class="video ${i > 0 ? 'disabled' : ''}" data-id="${video.id}" data-video="video${video.id}.mp4" data-title="${video.title}">
+                    <img src="images/play.svg" alt="">
+                    <p>${i + 1 > 9 ? i + 1 : '0' + (i + 1)}</p>
+                    <h3 class="title">${video.title}</h3>
+                    <p class="time">${video.duration}</p>
+                </div>
+            `;
+            videoPlaylist.innerHTML += videoElement;
+        });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const video = document.getElementById('video');
+            const playlistItems = document.querySelectorAll('.video');
+            const splashScreen = document.getElementById('splash-screen');
+            const currentVideoTitle = document.getElementById('current-video-title');
+            let currentIndex = 0;
+            let halfwayPointReached = false;
+            let skipAlertDisplayed = false;
+
+            function loadVideo(index) {
+                const videoSource = playlistItems[index].getAttribute('data-video');
+                const videoTitle = playlistItems[index].getAttribute('data-title');
+                video.src = videoSource;
+                currentVideoTitle.textContent = videoTitle;
+                document.getElementById('transcript-content').textContent = transcripts[index];
+                video.play();
+                halfwayPointReached = false;
+                updateStatus(index);
+            }
+
+            function updateStatus(index) {
+                playlistItems.forEach((item, i) => {
+                    if (i < index) {
+                        item.classList.add('completed');
+                    }
+                    if (i == index) {
+                        item.classList.add('active');
+                    } else {
+                        item.classList.remove('active');
+                    }
+                });
+            }
+
+            video.addEventListener('timeupdate', function () {
+                const halfwayPoint = video.duration / 2;
+                if (video.currentTime >= halfwayPoint && !halfwayPointReached) {
+                    halfwayPointReached = true;
+                    video.pause();
+                    splashScreen.style.display = 'flex';
+                }
+            });
+
+            video.addEventListener('ended', function () {
+                const activeVideo = document.querySelector('.video.active');
+                const status = activeVideo.querySelector('img');
+                status.src = "{{url_for('static',filename='images/tick.png')}}";
+
+                playlistItems[currentIndex].classList.add('completed');
+                currentIndex++;
+                if (currentIndex < playlistItems.length) {
+                    playlistItems[currentIndex].classList.remove('disabled');
+                    loadVideo(currentIndex);
+                }
+            });
+
+            // video.addEventListener('seeking', function (event) {
+            //     if (skipAlertDisplayed) {
+            //         video.currentTime = event.oldValue || 0;
+            //     } else {
+            //         skipAlertDisplayed = true;
+            //         video.currentTime = event.oldValue || 0;
+            //         alert("Heyy User, You can't skip the video");
+            //     }
+            // });
+
+            playlistItems.forEach((item, index) => {
+                item.addEventListener('click', function () {
+                    if (!item.classList.contains('disabled')) {
+                        currentIndex = index;
+                        loadVideo(currentIndex);
+                    }
+                });
+            });
+
+            loadVideo(currentIndex); // Load the first video on page load
+        });
+
+        function resumeVideo() {
+            const splashScreen = document.getElementById('splash-screen');
+            splashScreen.style.display = 'none';
+            const video = document.getElementById('video');
+            video.play();
+        }
+    </script>
+</body>
+
+</html>
